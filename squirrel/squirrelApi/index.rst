@@ -7,3 +7,4 @@ Squirrel API
     
     _camera.rst
     _mesh.rst
+    _world.rst
