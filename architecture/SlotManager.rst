@@ -64,3 +64,50 @@ However, when the engine is asked to convert a slot position to a float value th
 So ultimately the SlotPositions are nothing more than a way to abstract the actual position in the world.
 The user won't have to worry about where or what the origin of the world is, or origin shifting at all.
 All the details of where things end up in the world can be handled by the engine.
+
+Recipies and Chunks
+-------------------
+Recipies are a concept used by the slot manager to construct chunks.
+A recipe is a collection of plain data structures which describe how to construct a chunk.
+Recipies have nothing to do with an actual constructed chunk.
+
+The reason for recipies centres around threading and blocking IO.
+Much of the libraries used by the engine (bullet, ogre) have a preference of single threaded activity.
+For instance, the process of creating an ogre scene node is not thread safe.
+Therefore, the actual construction of the chunks needs to be done on the main thread.
+This holds true for a number of other non thread safe components.
+Recipies allow the threading system to load chunks into an intermediate state before their actual construction.
+This helps prevent the problems posed by blocking IO, as slow file read speeds won't cause the main thread to hang.
+
+When a chunk is requested to be constructed into the world, the recipe will first be loaded into memory before any construction happens.
+Recipies are stored in memory until they are destroyed to make room for a newer recipe.
+When a chunk is deconstructed, the recipe won't necessarily be destroyed along with it.
+The slot manager operates by maintaining a maximum number of recipies that can be loaded at a time.
+This way, if the chunk is later required to be reconstructed, and the recipe still exists in memory, then it won't have to be read in from a file again.
+
+Scripts and loading chunks
+--------------------------
+The Slot Manager has been designed to ask few questions about what it's asked to load.
+All of the actual logic of what needs to be loaded happens outside of the Slot Manager, with much of this being the ChunkRadiusLoader.
+This is a class which calculates which chunks need to be loaded based on the radius from the player.
+The Slot Manager itself simply does as it's told, only performing minimal sanity checks.
+
+Much of the api for the Slot Manager has been intentionally not exposed to scripts.
+This is because from a scripting point of view I felt the internal workings of the Slot Manager were too low level and complex.
+For instance, the slot manager has no concept of chunk garbage collection, meaning if a script accidentally loads a chunk and forgets to unload it, it'll remain there for the rest of the engine runtime.
+
+Scripts are able to tell the slot manager to load a recipe, which can be used for pre-loading areas, however there is no direct way to tell the manager to activate or construct chunks.
+The intended way to control the loading of chunks is to alter the position of the player.
+The player position is an abstract concept, and coupled with the entity system is easy to change.
+The whole point of the slot manager is to stream the world as the player moves around it.
+Components such as the chunk radius checks will react as the player position moves around and manage chunks accordingly.
+This has a number of advantages, such as removing the possiblilty that scripts can activate a chunk which actually lies outside the floating point safe zone, as the safe zone will have moved as the player position moves.
+In this process, by moving the player position, scripts can affect active chunks.
+
+ - It means scripts don't have to deal with constructing and de-constructing chunks.
+ - All logic of which scripts need to be loaded can be fed through the radius loader.
+
+Lots of the more complex functionality is going to be implemented in c++ as compared to Squirrel.
+Things like teleporting the player will be exposed to scripts, but actually implemented in the engine.
+That means the teleportation code can take advantage of the Slot Manager's functionality with things like pre-creating a chunk.
+In this way the scripts can use the flexiblity of the engine without having to expose complex system to the user.
