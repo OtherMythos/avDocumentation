@@ -111,3 +111,8 @@ Lots of the more complex functionality is going to be implemented in c++ as comp
 Things like teleporting the player will be exposed to scripts, but actually implemented in the engine.
 That means the teleportation code can take advantage of the Slot Manager's functionality with things like pre-creating a chunk.
 In this way the scripts can use the flexiblity of the engine without having to expose complex system to the user.
+
+Origin
+------
+The origin of the world is set in the top left corner of the coordinate system.
+This means that positive x moves in the right direction, and positive z moves downwards from the slot positions.
