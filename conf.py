@@ -175,7 +175,7 @@ epub_title = project
 epub_exclude_files = ['search.html']
 
 #The logo
-html_logo = 'img/logo.png'
+html_logo = 'img/logo.svg'
 
 html_theme_options = {
     'logo_only': True
