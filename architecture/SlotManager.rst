@@ -116,3 +116,67 @@ Origin
 ------
 The origin of the world is set in the top left corner of the coordinate system.
 This means that positive x moves in the right direction, and positive z moves downwards from the slot positions.
+
+Loading Procedure
+-----------------
+For much of its api the Slot Manager will perform a number of steps.
+The Slot Manager uses a threaded approach for loading chunks, and because of this not all requests are completed immediately.
+For instance, a request to construct a chunk might take a number of update ticks to actually display something on the screen.
+This is a variable ammount of time depending on how fast the user's computer can load the content from disk.
+
+
+The Slot Manager takes care of a lot of the heavy lifting for the user.
+For instance you can call the activateChunk function on a chunk that has never been activated before.
+The engine will deal with the procedure of loading and construction as well as activation.
+This means the user doesn't have to make a call to construct chunk, and then check that the chunk is constructed first before calling activating it.
+
+It is also entirely possible to call other api functions on chunks in between their loading cycle.
+Say for example you requested to construct a chunk, and then during its loading cycle you then made a call to activate that chunk, the engine will switch the operation to perform on the chunk midway, and you will get an activated chunk in the end.
+This way the user doesn't have to check if the chunk is done loading.
+
+Chunks have a few different states that can be set before their load. These are mostly activate and construct.
+A constructed chunk isn't necessarily visible, but its meshes and other content has been inserted into the world.
+An activated chunk is visible, and by its nature has also been constructed.
+The engine provides a number of api calls to influence how chunks are dealt with.
+
+The recipe system implemented in the SlotManager uses a number of recipe slots.
+Recipies will be loaded into these slots, when they're requested, and then replaced when the space they occupy is needed.
+If more recipies are currently pending than there are recipe slots, the request will be pushed into a queue.
+This queue will be depleated as recipe jobs complete.
+Once a recipe has finished, and its construction requests are performed, a chunk request will be popped from the queue to take the recipe slot.
+In this way hundreds of requests more than the size of the recipies list can be requested without any being lost.
+
+The Slot Manager works by providing an output to the user as soon as it's ready and tries to be as simple as possible.
+
+.. uml::
+
+    title ActivateChunk flow diagram
+
+    start
+    
+    if (Has the chunk already been constructed?) then (yes)
+      :Change the state of that chunk;
+      stop
+    else (no)
+      if (Is the recipe of that chunk set?) then (yes)
+        if(Is the recipe ready?) then (yes)
+          :Construct and activate from that recipe;
+          stop
+        else (no)
+          :Change the action to perform when the recipe is ready;
+          stop
+        endif
+      else (no)
+        if(Does that recipe request exist in the queue?) then (yes)
+          :Change the action to perform on the item in the queue;
+          stop
+        else (no)
+          :Start the procedure to load the recipe;
+          :Set the action to perform on the recipe to be loaded;
+          stop
+      endif
+    endif
+
+The procedure to construct a chunk is very similar to the above.
+The only difference is the chunk completion request will be a construction request.
+The activate request is similar because it also involves constructing the chunk.
