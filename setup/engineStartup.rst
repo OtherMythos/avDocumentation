@@ -67,7 +67,7 @@ The difference between the file types means the same binary engine can power a n
 
 avSetup File
 ------------
-The avSetup file is a game file, and there is intended to be one per game built with the engine.
+The ``avSetup.cfg`` file is a game file. There is intended to be one per game built with the engine.
 
 The file is an important file in the setup of the engine.
 It is responsible for outlining many of the basic options used by the engine, such as paths to other resource directories, and info such as a window title.
@@ -81,12 +81,46 @@ You could place them somewhere separate from the engine install, all you would h
 
 The config file is intended to represent a single game to be powered by the engine.
 Multiple config files can be used to represent multiple games, and allow easy swapping between games, rather than having to re-compile things.
-This also illeviates the idea of having to hard code search paths into the engine binary, as these things can be fed in at runtime.
+This also illeviates the trouble of having to hard code search paths into the engine binary, as these things can be fed in at runtime.
+
+The avSetup file is also used by the testing framework to describe a single test.
+It provides an easy way to encapsulate a single test case without having to modify the engine at all, as during startup the engine can just be pointed to a different file which represents a different test case.
+
+Here is an example of an ``avSetup.cfg`` file:
+
+.. code-block:: c
+
+    WindowTitle	A title
+    DataDirectory	.
+    CompositorBackground	1 0 1 1
+    SquirrelEntryFile	squirrelEntry.nut
+
+It contains simple metadata that the engine can use.
+For instance the data directory in this example is defined to be in the same directory as the setup file, wherever that might be.
+All other paths are defined relative to the data directory.
+
+.. Note::
+
+    When constructing a setup file, please make sure to adhere to the tabs and spaces format.
+    Entries in the file have keys and values, and there should be a *tab* between the two, not spaces.
+    Some editors insert spaces instead of tabs, however in this case you need to make sure that when you press the tab key you are actually inserting tabs.
+    If not the engine will skip over the entry.
+
+If a setup file contains entries like:
+
+.. code-block:: c
+
+    TestMode	True
+    TestName	SlotManagerActivatesChunk
+
+This means it is a testing setup file.
+Test mode being enabled enables some extra functionality in the engine, for instance allowing more access to the engine internals.
+It should not be used unless the engine is actually going to be running a test.
 
 Ogre HLMS files
 ---------------
 The Ogre HLMS files are a group of files necessary for the correct operation of Ogre.
 They're used as building blocks to generate shaders.
 They are engine files, and are therefore defined as part of the code.
-They are expected to be in the master directory under the name of ``Hlms``.
+They are expected to be in the master directory under the name of ``Hlms``, and are copied into the master directory by the build system from the ogre directory.
 If the engine can't find them it will abort.
