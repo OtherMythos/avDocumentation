@@ -6,3 +6,4 @@ Setup
     :name: toc-architecture
     
     engineStartup.rst
+    dataDirectory.rst

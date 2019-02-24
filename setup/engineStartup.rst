@@ -48,6 +48,8 @@ The Data directory is the directory which actually contains the game files.
 I like to refer to these as the data files, which is why it's called the data directory.
 The Data Directory is entirely built up of game files, which should be read only.
 
+For more information please see :ref:`data-directory`.
+
 Save Directory
 ^^^^^^^^^^^^^^
 The Save Directory is the directory in which the serialiser will write its contents to.
@@ -97,7 +99,11 @@ Here is an example of an ``avSetup.cfg`` file:
 
 It contains simple metadata that the engine can use.
 For instance the data directory in this example is defined to be in the same directory as the setup file, wherever that might be.
+
 All other paths are defined relative to the data directory.
+For example, providing a path to the squirrel entry file as shown above will expect it to be in the same directory as the provided data directory.
+If the squirrel entry file was specified as ``../entry.something`` the file would be expected to reside in the directory above the data directory, and have the name ``entry.something``.
+If the user doesn't want to provide relative paths, they can also supply absolute paths.
 
 .. Note::
 

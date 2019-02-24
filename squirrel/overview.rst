@@ -57,3 +57,11 @@ This would prevent me from having to otherwise write something like ``_meshCreat
 
 All of the apis documented in the further sections follow a similar approach.
 You can refer to the title of the page to find out which namespace those functions fall under.
+
+Squirrel Entry File
+-------------------
+
+The first script executed is the squrrel entry file. This script is responsible for the startup of the engine, and is therefore very important.
+
+The entry file is provided based on information in the ``avSetup.cfg`` file.
+For more information please see :ref:`squirrel-entry-file`.
