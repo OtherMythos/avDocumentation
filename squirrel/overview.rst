@@ -58,6 +58,53 @@ This would prevent me from having to otherwise write something like ``_meshCreat
 All of the apis documented in the further sections follow a similar approach.
 You can refer to the title of the page to find out which namespace those functions fall under.
 
+Engine Specific Types
+---------------------
+
+SlotPosition
+^^^^^^^^^^^^
+
+The engine exposes a few common built in types to squirrel.
+These can be used within squirrel as classes, and constructed in a way that is easy to understand.
+For example:
+
+.. code-block:: c
+
+    local position = SlotPosition(1, 2, 10, 20, 30);
+
+The above line of code will create an instance of a SlotPosition.
+This SlotPosition behaves identically to the SlotPosition found in the c++.
+It follows the same rules of overflow and underflow, as well as the origin respecting conversion.
+
+.. code-block:: c
+
+    local first = SlotPosition(1, 2); //Just the slot coordinates.
+    local second = SlotPosition(3, 4, 50, 60, 70); //Slot coordinates and a position.
+
+    local third = first + second;
+    third.toVector3(); //Translate relative to the origin.
+
+Vector3
+^^^^^^^
+
+Most of the time the engine does not provide a means to represent a vector.
+This is purley for the purpose of efficiency.
+Wrapping functionality around a class can become quickly convoluted, and for something simple like a vector, an array for representation is much more efficient.
+The SlotPosition requires its own class and container because in reality a slot position is a much more complex data object than a vector.
+Sanity checks and shifting is necessary for SlotPositions, while not necessary for vectors.
+
+Furthermore, the engine often times will take plain values for function parameters rather than something like a vector3 object.
+This is again for the sake of efficiency, as providing three floats to represent a vector3 is much more efficient than providing a wrapper class.
+
+.. code-block:: c
+
+    local result = SlotPosition(1, 2, 10, 20, 30); //Here there is no separator between the slot positions and the actual positions.
+    local vec = first.toVector3(); //Returns an array.
+
+    print("x: " + vec[0]);
+    print("y: " + vec[1]);
+    print("z: " + vec[2]);
+
 Squirrel Entry File
 -------------------
 
