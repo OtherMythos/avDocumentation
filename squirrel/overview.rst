@@ -112,3 +112,38 @@ The first script executed is the squrrel entry file. This script is responsible 
 
 The entry file is provided based on information in the ``avSetup.cfg`` file.
 For more information please see :ref:`squirrel-entry-file`.
+
+Scripted States
+---------------
+
+Scripted states are a way in which the user can specify scripts to run.
+Say for instance the user was in a situation where they had a script they wanted run each frame for a little while.
+For instance, if the weather in the game became rainy.
+If in this situation some sort of water based entity should start spawning, how would that be implemented?
+
+Scripted states solve this problem.
+With a scripted state you can specify a script to be run each frame.
+The user has complete control over when the state starts and when it ends.
+The script will be run until the state is ended.
+In the case of the rain example, the state would be started when the rain starts, the script would create monsters as it runs, and then stop when it ends.
+
+Scripts work by providing a name for the state and a script to run.
+This script has three functions which are run, ``start()``, ``update()`` and ``end()``.
+These functions are expected to be defined within the provided script file.
+Start is called once when the state begins, end is called once when it ends.
+Update is called each update tick until the state is ended.
+
+So in the above described example, update would generate random numbers to decide when to generate monsters,
+and end would kill them all off horribly, because they can't survive without the rain.
+If code for start is not needed, this function can be omitted. The same applies to the other functions.
+
+There are a number of places where states become useful, for instance boss fights might want a state to run until the boss ends.
+This state might print things to the screen, or generate hazards for the player.
+
+If the player was in one of those levels where if you walk into an area you get found out, a state could be made to keep track of whether the player has gone there yet.
+
+The flexibility of being able to specify a script for the task makes the system very powerful.
+As a matter of fact, the squirrel entry file is being run as a state, meaning you can define the start, update and end functions in your script and have them run.
+This is a state known as the ``EngineState``, and is the only state which cannot be ended manually.
+It will be started on engine start, and ended on engine shutdown.
+If there are any states left running during engine shutdown, they will be ended.
