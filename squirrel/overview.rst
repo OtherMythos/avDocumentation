@@ -147,3 +147,12 @@ As a matter of fact, the squirrel entry file is being run as a state, meaning yo
 This is a state known as the ``EngineState``, and is the only state which cannot be ended manually.
 It will be started on engine start, and ended on engine shutdown.
 If there are any states left running during engine shutdown, they will be ended.
+
+Script File Types
+-----------------
+
+The c++ has two different ways to compile and execute a squirrel file. These are the ``Script`` class and the ``CallbackScript`` class.
+These two classes are used to compile squirrel files and expose them to the c++, but they do this in different ways.
+The Script class compiles scripts as a single executable.
+The Callback script compiles them into multiple closures, which can be individually executed on request.
+The Callback script class is used to perform the various callback operations that the engine performs.
