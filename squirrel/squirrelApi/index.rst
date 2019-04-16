@@ -13,6 +13,8 @@ Function Namespaces
     _camera.rst
     _mesh.rst
     _world.rst
+    _entity.rst
+    _input.rst
 
 Class Namespaces
 ----------------

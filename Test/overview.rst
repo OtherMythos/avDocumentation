@@ -3,10 +3,9 @@ Testing Overview
 
 The avEngine employs a range of testing methods to ensure built in quality (fancy term).
 
-There are three majour types of test that the engine supports:
+There are two majour types of test that the engine supports:
  - C++ unit tests
  - Squirrel integration tests
- - Squirrel unit tests
 
 These test types are explained in more detail below.
 
@@ -20,6 +19,22 @@ The unit tests are written using the Google testing framework.
 This includes GTest and GMock.
 
 The unit tests live in the engine repository under ``avEngine/test/unit``, and have their own cmake build system, so can be built separately from the engine.
+
+Squirrel Unit Tests
+^^^^^^^^^^^^^^^^^^^
+
+Squirrel unit tests are used to address the issues caused by exposing c++ functionality to squirrel.
+It is very easy to break something that previously worked when manipulating the stack, and this has the potential to destroy scripts that previously worked.
+
+The Squirrel Unit tests, as they have been dubbed, are used to test that squirrel exposed functions work and act as they always have.
+They work by setting up a squirrel vm specifically for unit testing.
+This has the same root table setup as the actual vm.
+Squirrel code in the form of strings is supplied by the code. These scripts perform simple operations or checks that can return values to the c++.
+The Google testing framework can then be used to make assertions on these results.
+
+It's worth noting that the entire squirrel namespace isn't tested completely here.
+Much of the functionality is very involved with the operating engine, and would therefore be very difficult to test as individual units.
+Therefore, a good deal of the namespace checks happen in the integration tests.
 
 Squirrel Integration Tests
 --------------------------
@@ -91,11 +106,3 @@ Information on its use can be found by running:
 .. code-block:: bash
 
     ./testRunner.py --help
-
-Squirrel Unit Tests
---------------------------
-
-Squirrel unit tests are used to address the issues caused by exposing c++ functionality to squirrel.
-It is very easy to break something that previously worked when manipulating the stack, and this has the potential to destroy scripts that previously worked.
-
-The Squirrel Unit tests, as they have been dubbed, are used to test that squirrel exposed functions work and act as they always have.
