@@ -17,7 +17,7 @@ A chunk is a piece of data that fits into a slot.
 In order to stream an open world, you need to split it into smaller individual *chunks* of data.
 This data is loaded in and presented in the world depending on where the player is at that moment.
 As the player moves around, new chunks are loaded and inserted, and old ones are deleted.
-In this sense the game gives the impression that the whole world is loaded at a single time, when infact it is only partly loaded. 
+In this sense the game gives the impression that the whole world is loaded at a single time, when infact it is only partly loaded.
 
 Floating Point Precision
 ------------------------
@@ -30,7 +30,7 @@ Ultimately it leads to peculiar results from the 3d render, or innacurate physic
 My design combats floating point issues by splitting the map into smaller sections, these sections are known as *slots*.
 
 So slots would have a set size in world coordinates, say 500 units.
-That means the origin would have a value of 
+That means the origin would have a value of
 
 x:0 y:0
 
@@ -153,7 +153,7 @@ The Slot Manager works by providing an output to the user as soon as it's ready 
     title ActivateChunk flow diagram
 
     start
-    
+
     if (Has the chunk already been constructed?) then (yes)
       :Change the state of that chunk;
       stop
@@ -180,3 +180,22 @@ The Slot Manager works by providing an output to the user as soon as it's ready 
 The procedure to construct a chunk is very similar to the above.
 The only difference is the chunk completion request will be a construction request.
 The activate request is similar because it also involves constructing the chunk.
+
+Interiors
+---------
+
+An interior is a special type of map which does not utilise the streamable world as described above.
+Their purpose if an optimisation of the map switching that takes place when the player needs to go somewhere different.
+They act as a pseudo map switch, where the map isn't really switched at all.
+Instead the chunks of the current map are hidden, and the player is transported to a smaller scene.
+
+The use case for these is if the player wanted to enter a house.
+If the inside of the house was to be a different map, a lot of background work would need to be done so that the player could visit a relatively small area (destroying entities, destroying geometry, destroying physics shapes).
+Interiors solve this problem.
+
+So rather than a map switch happening, an interior can be activated which contains a simple scene like structure.
+There are no chunks or slots within an interior, and everything is loaded up front.
+This means that there is a limit on how large an interior can be, and they make no effort to address the floating point problem described above.
+This is because interiors should never be that large.
+
+The c++ and squirrel offers an api to set an interior as active.

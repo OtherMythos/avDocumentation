@@ -92,10 +92,47 @@ The Player Component
 ^^^^^^^^^^^^^^^^^^^^
 
 The player component is an important component for the engine.
-The engine itself has no solid definition of what the player should be, or how it should act, but the player component does help it keep track of which entity represents the player.
+The engine itself has no solid definition of what the player should be, or how it should act, but the position component does help it keep track of which entity represents the player.
 In and of itself the position component is an empty component which does nothing.
 It is mearly used by the engine to designate the player.
 
 There can only be one entity at a time with the player component.
 The user has no direct access to the component, except for the ``setPlayer()`` function in the entity manager.
 This will give the player component to that entity, and remove it from any other entity which had it until then.
+
+Entity Tracking
+---------------
+
+Entity Tracking is the method I use to manage entity lifetime.
+Say for instance an entity was created in the world, when would I want it to be destroyed?
+As the engine supports an open world game, that would most likely be when the player goes far enough away from that entity.
+It is important to make sure that entities are managed, as in some cases the engine can add them to the world automatically.
+It would make sense therefore that they can also be removed automatically.
+
+That is the solution that entity tracking provides.
+Entities are sorted into entity chunks.
+These chunks are very similar to slots in the Slot Manager, in that they represent sections of the world.
+An Entity Chunk is essentually a section of the map, that contains a list of which entities reside within it.
+The player has a load radius, and if they move far enough away from that chunk, it is destroyed.
+
+Chunks are created lazily, meaning that if there are no entities in that part of the map a chunk won't be created.
+If an entity is inserted into an area of the map that has no entities, a chunk will be created to contain it.
+If the final entity in a chunk is removed, the chunk and its list won't be destroyed until it goes out of range.
+If the map switches, all tracked entities are destroyed.
+
+Upon entity creation, the entity manager asks the user whether they want this entity to be tracked or not.
+Essentually this decision boils down to, 'Do you want me to deal with the entity's deletion, or do you want to be responsible for it?'
+If the entity is not tracked by the engine, it will not be deleted automatically.
+That becomes the user's job.
+
+The engine preferes to manage entities itself though.
+Entities created as part of a chunk creation are tracked by default.
+
+The EntityManager exposes an api to track and untrack entities.
+The squirrel scripts also have access to an api to track and untrack entities by an eId.
+Really, the only time an entity should be untracked is when they're being used for something specific in a script, such as a cutscene.
+
+If an entity is untracked, it will not disappear until something manually destroys it.
+Furthermore, it will persist engine serialisation, meaning you might be stuck with it forever.
+
+So please make sure that if you come to untrack an entity it is eventually destroyed.
