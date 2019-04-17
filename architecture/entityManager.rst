@@ -136,3 +136,40 @@ If an entity is untracked, it will not disappear until something manually destro
 Furthermore, it will persist engine serialisation, meaning you might be stuck with it forever.
 
 So please make sure that if you come to untrack an entity it is eventually destroyed.
+
+Tracking and Untracking
+----------------------
+
+Entities can be either tracked or untracked on the fly.
+This is useful if you decide you want to delegate control of the entity back to the engine or visa versa.
+
+Code like this will create an entity tracked, and then untrack it.
+
+.. code-block:: c
+
+    local e = _entity.createTracked(SlotPosition()); //Create a tracked entity.
+    _entity.untrack(e); //The entity is now untracked.
+    _entity.track(e); //And now it's re-tracked.
+
+Destruction of tracked entities
+-------------------------------
+
+An entity being tracked means the emphasis is put on the engine to manage its lifetime.
+This means that the engine has control over when it is destroyed.
+As such, the user needs to be aware during their interaction with tracked entities that they might be destroyed while using them.
+This destruction is not random, and will most of the time happen when the player goes far enough away from the entity, or the entity makes some sort of movement.
+As such, the user needs to be aware that tracked entities should involve more checks in the scripts than their untracked counterparts.
+
+The engine exposes a way to check if an entity is still valid.
+
+.. code-block:: c
+
+    local e = _entity.createTracked(SlotPosition());
+    if(e.valid()){
+        print("Doing some stuff with a valid entity.");
+    }
+
+This method works for both tracked and untracked entities.
+
+The best practice for this situation would be to avoid direct scripted interaction with tracked entities as much as possible.
+If heavy scripting is involved for an entity, untracked entities should be used instead.
