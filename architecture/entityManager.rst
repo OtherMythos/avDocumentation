@@ -173,3 +173,72 @@ This method works for both tracked and untracked entities.
 
 The best practice for this situation would be to avoid direct scripted interaction with tracked entities as much as possible.
 If heavy scripting is involved for an entity, untracked entities should be used instead.
+
+Entity Callbacks
+----------------
+
+The entity manager exposes an interface to run squirrel scripts on event occurance.
+These take the form of entity callbacks.
+Ultimately, this is based on the callback script system, where closures (functions) can be entered into a script file and executed on demand.
+This system allows the user extended control of entity operation.
+
+An example of a callback script would be:
+
+.. code-block:: c
+
+    function moved(entity){
+        _entity.destroy(entity);
+    }
+
+    function destroyed(entity){
+        print("destroyed");
+    }
+
+Callback scripts are attached to entities like this:
+
+.. code-block:: c
+
+   _component.script.add(e, _settings.getDataDirectory() + "/EntityScript.nut");
+
+An entity can only have one callback script at a time, and they are attached to the entity as components.
+Similarly to other components, the script component can be removed, and a different one put in its place.
+
+In the example you can see the layout of a callback script.
+Functions are entered and executed based on their names.
+For instance, the 'moved' function would be executed whenever the specific entity moves.
+The designated names are set, meaning that you must specify a function called 'moved' if you want to receive movement callbacks.
+
+Entity callbacks also take an eid as a parameter.
+This allows the user to perform functionality based on the specific entity that has caused the event.
+In the example above you can see that whenever an entity moves, it is immediately destroyed.
+This will lead to the destroyed function callback being executed before the moved callback returns.
+Although much of this functionality is quite useless, it demonstrates how more complex functionality could be implemented.
+Callback functions have access to the complete functionality of the scripting system, and as such are very powerful.
+
+Implementation details
+^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned previously, the entity callback system is based on the regular script callback system (the same that handles scripted states).
+However, there are some further changes in functionality to improve efficiency.
+The most prominent is that entity callback scripts are reference counted.
+If multiple entities use the same script, it is only loaded in memory once.
+The only change between executions is the eid that's passed to the script.
+
+This means that something like
+
+.. code-block:: c
+
+    function moved(entity){
+        x <- 10;
+    }
+
+will persist between all entities that use this script.
+
+
+When no entities reference this script, it will be unloaded.
+
+It is also worth mentioning that for efficiency's sake, the user should try and only define the callbacks that they actually need.
+For instance, defining the ``moved`` callback is actually quite an expensive operation, as then the moved callback will be called each time that entity moves.
+These calls can become expensive, so try and avoid them if possible.
+
+Callback scripts are scanned for entries at load, which is more efficient than each time a callback is fired.
