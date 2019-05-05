@@ -138,7 +138,7 @@ Furthermore, it will persist engine serialisation, meaning you might be stuck wi
 So please make sure that if you come to untrack an entity it is eventually destroyed.
 
 Tracking and Untracking
-----------------------
+-----------------------
 
 Entities can be either tracked or untracked on the fly.
 This is useful if you decide you want to delegate control of the entity back to the engine or visa versa.
