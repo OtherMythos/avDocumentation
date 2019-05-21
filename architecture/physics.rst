@@ -68,3 +68,125 @@ Components such as the rigidBodyComponent can be created to give that entity a p
 By doing this they will be taken into account when during any physics simulations, and in some cases this will effect them later on (rigidBody moving the entity around).
 
 For some entity configurations, an entity having a shape in a physics world is necessary, for instance the player controller requires a shape in the physics world to detect collisions with things.
+
+
+Threading
+=========
+
+.. Note::
+    The following is a work in progress design.
+
+Threading the bullet world would provide a substantial performance optimisation.
+
+I am proposing to have an entire thread devoted to processing and updating the bullet world.
+This would happen each frame, and would be responsible for updating the world and synching it up with the main thread.
+
+Why not update the world in a job?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+I am speculating problems caused by the mis-match of job functionality.
+Jobs are intended to be used for things which are largely 'set and forget'.
+They have no deadline.
+For example, loading in chunks of the map.
+This would be finished when it's finished, and there should be no reliance on timing.
+If it takes a year to load the chunk in then so be it (that would never happen though).
+The problem would be that if the job stack was full of jobs which take a year to complete, something like the physics would become blocked.
+We would want the physics to update each frame, but this is not reliable in the job system, as jobs are processed when a worker thread becomes available.
+
+So a dedicated thread becomes the only solution.
+Physics processing is such an integral part of the engine operation that it's worth giving it a devoted thread.
+
+How is it going to be thread safe?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is obviously the main question.
+Bullet by itself is not thread safe, and pretty much the entire api cannot be used in a multi-threaded manner.
+My dedicated thread is going to update all three bullet worlds each frame. One of them is a dynamics world, and the rest are simple collision worlds.
+I'll first describe my plan for the collision worlds as they are simpler.
+
+Collision Worlds
+----------------
+
+The collision worlds simply determine collisions between objects.
+Rather than stepping the world, you instead just check for collisions.
+Shapes can be moved around, and the output of the collision check are collision manifolds, which describe which shapes are colliding.
+That's all the main thread is interested in.
+
+When the check for collisions is happening in a thread, nothing can change in the world.
+So this means the main thread cannot have direct access to it at all.
+However, the main thread will still want to insert things, or alter variables and so on.
+For this reason, a work around is required.
+
+The main thread communicates with the worlds through a command queue.
+These commands are queued up until the main thread is able to process them.
+This will happen at the start of the physics world's update procedure, before the world is updated.
+These commands might be something like:
+ - Create a physics object
+ - Apply force to an object
+ - Remove an object
+
+These commands can be queued up at any point by any thread. They will be processed when the physics thread is able.
+So this means writes to the physics worlds will only ever happen when it is safe.
+
+These writing similarities are shared between all three worlds, including the dynamics world.
+For the collision worlds, reading is much simpler.
+As previously mentioned, the only value you might ever want to read is the collision manifolds.
+The main thread only cares about the collisions, and as long as this is delivered to the main thread in a suitable manner there is no further requirements. 
+
+Dynamics World
+--------------
+
+The dynamics world is inherently more complex.
+As part of the world update, ridgid bodies can move on their own accord.
+These changes to the shapes need to be updated and synchronised with the main thread.
+
+A common usage for ridgid bodies is attaching them to entities, to act as a controller object to navigate the world.
+So therefore, if the ridgid body moves, the entity should move along with it.
+This sort of information needs to be synchornised with the main thread.
+That in itself isn't that big of a problem.
+
+The biggest problem is wanting to do things like ray-casting in the dyanmics world.
+Ultimately, ray casting is a necessity for a number of reasons.
+It's useful for writing things like character controllers, or programming ai.
+
+However, this is largely just speculation.
+At this stage of the project, I can't be sure how important ray casting is going to be.
+A problem I'm conerned of is locking causing problems.
+
+I need to have a world which is always in a ready state.
+That way it can be queried.
+
+I feel like there might be a better way to do this.
+For instance, I could queue up by ray casts.
+Or register that I want it done each frame.
+This way they could be done in batches when the world is ready.
+The problem is that I'm not entirely sure at this point how valuable ray casts are going to be (although I can imagine quite a bit).
+A queued system would help a lot though.
+There's going to be a point in the physics world where the update starts.
+If I request a ray immediately after that, it would hit a lock, and the entire thread would become redundant.
+The main thread would have to wait for it to finish, and that's a problem.
+These rays need to be easy to call.
+
+So:
+Determine the timeline for this (can I have the dynamics world and the collision world, rather than two collision worlds).
+Can I just have a lock around the write to the collision world.
+In my immediate mind, two collision worlds sounds like it might be best, but that's a lot for just raycasting.
+
+
+--
+I sort of came to the conclusion that rays are going to be more complex to support.
+I can have a system where rays are requested and performed each frame.
+For something like entities this could be done per ridgid body.
+So for instance, project a ray from this position downwards.
+The the results can be used later on.
+But the point is, they're done pre-emptively.
+
+The thing is, right now I need to just start on the basics.
+I feel like ray casting is going to become a bigger thing further down the line, but this is a prototype.
+I need to be able to add things to the world, and see them function.
+Ray casting is really just a sort of enhancement for later on.
+
+So I need to write the api to add shapes to the world, and then determine their position.
+This would be having a class (cube), where you can just set it up with a shape.
+Later the physics would output something that moves the cube position.
+If I can see a moving cube that's good.
