@@ -20,6 +20,19 @@ The engine will then search for these files based on the above defaults.
 If any of these files aren't found the engine won't crash, however it will start in a state where certain things might not work.
 For instance, if no squirrel entry file is provided the engine will launch but do nothing.
 
+.. Note::
+    
+    The data directory is automatically assumed to exist in the master directory, unless otherwise stated in the ``avSetup.cfg`` file.
+    
+    If you want the data directory to be inside the same directory as the avSetup.cfg file, you must specify that in the file.
+    For example:
+    
+    .. code-block:: c
+
+        DataDirectory	.
+        
+    All paths within the setup file are resolved relative to the setup file's path.
+
 .. _squirrel-entry-file:
 
 Squirrel Entry File
