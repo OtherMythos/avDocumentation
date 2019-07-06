@@ -32,16 +32,16 @@ My design combats floating point issues by splitting the map into smaller sectio
 So slots would have a set size in world coordinates, say 500 units.
 That means the origin would have a value of
 
-x:0 y:0
+``x:0 y:0``
 
 The position 500 in world coordinates would be:
 
-x:1 y:1
+``x:1 y:1``
 
 Because the size of a single slot is 500x500.
 In between these slots is another measurement, which I represent as an OgreVector3.
 
-x:1 y:0 (100, 0, 100)
+``x:1 y:0 (100, 0, 100)``
 
 This vector3 allows you to represent any position within slot space.
 This coordinate system is known as *SlotPositions*.
@@ -180,6 +180,23 @@ The Slot Manager works by providing an output to the user as soon as it's ready 
 The procedure to construct a chunk is very similar to the above.
 The only difference is the chunk completion request will be a construction request.
 The activate request is similar because it also involves constructing the chunk.
+
+Map Switching
+-------------
+
+The engine allows scripts to specify when to switch maps.
+This is done like this:
+
+.. code-block:: c
+
+    _slotManager.setCurrentMap("mapName");
+
+Maps are identified by their string name.
+
+Switching maps involves the following procedure:
+
+ - Destroys all tracked entities.
+ - Destroys all chunks (meshes, physics shapes)
 
 Interiors
 ---------

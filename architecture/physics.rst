@@ -63,11 +63,24 @@ In this way I'm able to take advantage of the full power of bullet to create eve
 
 Usage
 -----
-Interracting with the physics worlds is done via entity components.
-Components such as the rigidBodyComponent can be created to give that entity a presence in the dynamics world.
-By doing this they will be taken into account when during any physics simulations, and in some cases this will effect them later on (rigidBody moving the entity around).
 
-For some entity configurations, an entity having a shape in a physics world is necessary, for instance the player controller requires a shape in the physics world to detect collisions with things.
+Interracting with the physics world can be done via a number of methods.
+Much of the api is exposed to scripts, as they are able to flexibly create things like physics shapes, bodies, add and remove them from the world an so on.
+Created rigid bodies can be attached to entities and meshes, allowing a visual representation of these bodies in the world.
+
+An example of usage would be the following:
+
+.. code-block:: c
+
+    //Create a shape for the rigid body. This can be used to create an unlimited number of rigid bodies.
+    local shape = _physics.getCubeShape(1, 1, 1);
+    local body = _physics.dynamics.createRigidBody(shape);
+    //Add it to the world. It's only considered as part of the simulation once this has happened.
+    _physics.dynamics.addBody(body);
+
+    //Attach it to an entity via a component. The entity will now be moved as the body moves.
+    ::entity <- _entity.create(SlotPosition());
+    _component.rigidBody.add(entity, body);
 
 
 Threading
@@ -82,7 +95,7 @@ I am proposing to have an entire thread devoted to processing and updating the b
 This would happen each frame, and would be responsible for updating the world and synching it up with the main thread.
 
 Why not update the world in a job?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 I am speculating problems caused by the mis-match of job functionality.
 Jobs are intended to be used for things which are largely 'set and forget'.
@@ -97,7 +110,7 @@ So a dedicated thread becomes the only solution.
 Physics processing is such an integral part of the engine operation that it's worth giving it a devoted thread.
 
 How is it going to be thread safe?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 This is obviously the main question.
 Bullet by itself is not thread safe, and pretty much the entire api cannot be used in a multi-threaded manner.
@@ -105,7 +118,7 @@ My dedicated thread is going to update all three bullet worlds each frame. One o
 I'll first describe my plan for the collision worlds as they are simpler.
 
 Collision Worlds
-----------------
+================
 
 The collision worlds simply determine collisions between objects.
 Rather than stepping the world, you instead just check for collisions.
@@ -131,7 +144,7 @@ So this means writes to the physics worlds will only ever happen when it is safe
 These writing similarities are shared between all three worlds, including the dynamics world.
 For the collision worlds, reading is much simpler.
 As previously mentioned, the only value you might ever want to read is the collision manifolds.
-The main thread only cares about the collisions, and as long as this is delivered to the main thread in a suitable manner there is no further requirements. 
+The main thread only cares about the collisions, and as long as this is delivered to the main thread in a suitable manner there is no further requirements.
 
 Dynamics World
 --------------
