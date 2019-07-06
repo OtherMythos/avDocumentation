@@ -203,3 +203,63 @@ So I need to write the api to add shapes to the world, and then determine their 
 This would be having a class (cube), where you can just set it up with a shape.
 Later the physics would output something that moves the cube position.
 If I can see a moving cube that's good.
+
+Physics Squirrel Exposure
+-------------------------
+
+Physics are exposed to squirrel in quite a flexible way.
+
+.. code-block: c::
+
+    local cubeShape = _physics.createCube(10, 20, 30) //Create a cube shape. This shape can be shared between bullet objects.
+
+    local constructionInfo = {"mass":10, "friction":10}; //Used for the initial construction
+
+    local rigidBody = _physics.dynamics.createRigidBody(cubeShape, constructionInfo); //Construct a rigid body in the dynamics world.
+    local collisionShape = _physics.collision.createCollider(cubeShape); //Create a collider, constructed with the cube shape.
+
+    _entity.rigidBody.add(e, rigidBody);
+    local mesh = _mesh.createMesh("ogrehead2");
+    mesh.attachToRigidBody(rigidBody);
+
+As you can see, there is a separation betwen the body creation and the actual assignment to its use.
+In this example I create a shape, and assign it to both a mesh and an entity.
+This shows that the api is flexible in what you actually want to do with your physics objects.
+In this case the mesh would reflect the transformation of the rigid body, and the same would happen for the entity.
+
+Physics shapes are created in separation from the physics world.
+This means they can be shared between worlds, and will persist a world re-creation.
+Physics objects on the other hand are created bound to their world.
+They cannot be used interchangeably, and will not survive a world re-creation.
+
+Physics Shape Lifetime
+----------------------
+
+Lifetime of shapes in scripts is based on reference counting.
+The user is able to share shapes between physics objects or other squirrel variables.
+The shape memory manager will destroy the shape when it is no longer being referenced by anything.
+
+.. code-block: c::
+
+    //Shape is created.
+    ::first <- _physics.getCubeShape(10, 20, 30);
+    //Nothing else references this shape. It is destroyed.
+    delete ::first
+    
+    //---------------------------------------------------
+    function something(){
+        local shape = _physics.getSphereShape(25);
+    }
+    //The shape goes out of scope, it is destroyed.
+    
+    
+    //---------------------------------------------------
+    ::another <- _physics.getCubeShape(35, 45, 55);
+
+    //Create a duplicate of this shape (<- is the same as the = operator)
+    ::second <- ::another;
+
+    //Destroy the first shape. The shape itself will still exist as long as second still exists.
+    delete ::another;
+    //Now destroy second. The shape should be destroyed.
+    delete ::second;
