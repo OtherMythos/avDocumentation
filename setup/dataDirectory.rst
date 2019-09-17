@@ -21,16 +21,16 @@ If any of these files aren't found the engine won't crash, however it will start
 For instance, if no squirrel entry file is provided the engine will launch but do nothing.
 
 .. Note::
-    
+
     The data directory is automatically assumed to exist in the master directory, unless otherwise stated in the ``avSetup.cfg`` file.
-    
+
     If you want the data directory to be inside the same directory as the avSetup.cfg file, you must specify that in the file.
     For example:
-    
+
     .. code-block:: c
 
         DataDirectory	.
-        
+
     All paths within the setup file are resolved relative to the setup file's path.
 
 .. _squirrel-entry-file:
@@ -63,6 +63,8 @@ It is a simple config file which contains various paths.
 In this example I provide an absolute path and a relative path to directories.
 The engine accepts both. Relative paths are resolved relative to the location of the ogre resources file, **not** the data directory.
 This is more manageable for tests.
+
+.. _maps-directory:
 
 The Maps Directory
 ------------------

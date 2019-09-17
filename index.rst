@@ -48,6 +48,7 @@ Here's a friendly list of topics (unless I don't like you, in which case it's an
     :name: sec-Architecture
 
     architecture/index
+    CreatingContent/index
     setup/index
     squirrel/index
     Test/index
