@@ -19,7 +19,7 @@ It's used extensively for things like entity controllers and collision in genera
 The dynamics world is filled with a number of shapes at chunk load, for instance shapes to represent the terrain surface or other collidable things.
 Much of these things are static, however it is quite possible for bodies to be inserted into the world which are not.
 
-Entites use their rigid bodies to determine where they should be positioned, and when an entity has a rigidBodyComponent they will be re-positioned each frame to reflect the movements of their body.
+Entities use their rigid bodies to determine where they should be positioned, and when an entity has a rigidBodyComponent they will be re-positioned each frame to reflect the movements of their body.
 
 Trigger World
 -------------
@@ -31,8 +31,8 @@ These trigger objects could be a variety of things, for instance:
  - Sound emission triggers
  - Ai trigger events
 
-Essentually the trigger will just allow the user to place shapes about their world that are invisible to the player.
-Currently, the system works by fitting a shape to the frong the player.
+Essentially the trigger will just allow the user to place shapes about their world that are invisible to the player.
+Currently, the system works by fitting a shape to the front the player.
 When this trigger collides with other shapes, the appropriate actions described by the colliding triggers can be performed,
 although this could be extended to include support for other entities as well.
 
@@ -222,7 +222,7 @@ Physics are exposed to squirrel in quite a flexible way.
     local mesh = _mesh.createMesh("ogrehead2");
     mesh.attachToRigidBody(rigidBody);
 
-As you can see, there is a separation betwen the body creation and the actual assignment to its use.
+As you can see, there is a separation between the body creation and the actual assignment to its use.
 In this example I create a shape, and assign it to both a mesh and an entity.
 This shows that the api is flexible in what you actually want to do with your physics objects.
 In this case the mesh would reflect the transformation of the rigid body, and the same would happen for the entity.
@@ -245,14 +245,14 @@ The shape memory manager will destroy the shape when it is no longer being refer
     ::first <- _physics.getCubeShape(10, 20, 30);
     //Nothing else references this shape. It is destroyed.
     delete ::first
-    
+
     //---------------------------------------------------
     function something(){
         local shape = _physics.getSphereShape(25);
     }
     //The shape goes out of scope, it is destroyed.
-    
-    
+
+
     //---------------------------------------------------
     ::another <- _physics.getCubeShape(35, 45, 55);
 
