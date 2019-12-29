@@ -11,3 +11,4 @@ Architecture
     physics.rst
     SlotManager.rst
     Serialisation.rst
+    DialogSystem.rst
