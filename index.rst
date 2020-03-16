@@ -7,13 +7,24 @@ AV Engine Documentation
 ===================================================
 
 Welcome to the documentation for the AV Engine.
-Feel free to look around! It's all very exciting.
 
 The AV engine is a game engine written in C++ that I've been writing in my free time, as part of a larger project.
-The eventual goal and purpose of the engine is to support an as of yet unrealeased game.
+The eventual goal and purpose of the engine is to support an as of yet unreleased game.
 This documentation aims to serve as a means for me to document how everything works and fits together, as well as how to use the functions of the engine itself.
 
-The engine is intended to support a game with features such as:
+Features of the engine include:
+ - Implementation of a streamable open world
+ - Real-time physics
+ - A heavy focus on scripting and data driven content
+ - Abstraction of platform specifics
+ - An Entity Component System
+ - Support for serialisation
+ - A powerful dialog system
+
+As well as this I've tried to architect the engine as cleanly as possible, both as a learning experience and to increase its future maintainability.
+The engine tries to be as data driven as it can, while still trying to be as optimised as possible.
+
+The engine is intended to support a game with the following features:
  - 3D graphics
  - A streamable open world
  - Explorative style RPG
@@ -21,16 +32,9 @@ The engine is intended to support a game with features such as:
  - Extensibility via scripts and mods
  - Cross Platform
 
-Features of the engine include:
- - Implementation of a streamable open world
- - Realtime physics from bullet
- - An Entity Component System provided by EntityX
- - A heavy focus on scripting and data driven content
- - Support for serialisation
- - Abstraction of platform specifics
-
-As well as this I've tried to architect the engine as cleanly as possible, both as a learning experience and to increase its future maintainability.
-The engine tries to be as data driven as it can, while still trying to be as optimised as possible.
+However, it can be used to create other sorts of projects as well.
+For instance, 2d games are completely possible using the engine's 2d features.
+Furthermore, with its data driven nature, many different kinds of projects can be created using this engine.
 
 Much of the engine is based on external libraries. These include:
  - Ogre3D
@@ -39,8 +43,6 @@ Much of the engine is based on external libraries. These include:
  - Squirrel (Scripting Language)
  - SDL for desktop windowing
  - A few smaller utility libraries
-
-Here's a friendly list of topics (unless I don't like you, in which case it's an unfriendly list):
 
 .. toctree::
     :maxdepth: 2
