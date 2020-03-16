@@ -148,35 +148,6 @@ In this way hundreds of requests more than the size of the recipies list can be 
 
 The Slot Manager works by providing an output to the user as soon as it's ready and tries to be as simple as possible.
 
-.. uml::
-
-    title ActivateChunk flow diagram
-
-    start
-
-    if (Has the chunk already been constructed?) then (yes)
-      :Change the state of that chunk;
-      stop
-    else (no)
-      if (Is the recipe of that chunk set?) then (yes)
-        if(Is the recipe ready?) then (yes)
-          :Construct and activate from that recipe;
-          stop
-        else (no)
-          :Change the action to perform when the recipe is ready;
-          stop
-        endif
-      else (no)
-        if(Does that recipe request exist in the queue?) then (yes)
-          :Change the action to perform on the item in the queue;
-          stop
-        else (no)
-          :Start the procedure to load the recipe;
-          :Set the action to perform on the recipe to be loaded;
-          stop
-      endif
-    endif
-
 The procedure to construct a chunk is very similar to the above.
 The only difference is the chunk completion request will be a construction request.
 The activate request is similar because it also involves constructing the chunk.

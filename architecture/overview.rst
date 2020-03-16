@@ -13,12 +13,6 @@ Bird's eye view
 ---------------
 The engine is split into a number of components.
 
-.. uml:: 
-
-    package "Something"{
-        [Main Component]
-    }
-
 Outline of Components
 ---------------------
 Much of the engine is based around an event messaging system, which is supplied by the event manager.
