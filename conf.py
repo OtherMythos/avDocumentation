@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'AV Engine Documentation'
-copyright = '2018-2019, Edward Herbert'
+copyright = '2018-2020, Edward Herbert'
 author = 'Edward Herbert'
 
 # The short X.Y version
