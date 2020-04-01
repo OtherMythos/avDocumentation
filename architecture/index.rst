@@ -12,3 +12,4 @@ Architecture
     SlotManager.rst
     Serialisation.rst
     DialogSystem.rst
+    InputSystem.rst
