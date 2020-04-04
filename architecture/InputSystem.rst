@@ -64,7 +64,7 @@ Finally, the contents of these actions can be queried.
     //Returns a float between 0 and 1 of how far pressed the trigger is.
     local fireVelocity = _input.getTriggerAction(::FireHandle);
 
-    //Returns a single float each between -1 and 0, with 0 being the middle.
+    //Returns a single float each between -1 and 1, with 0 being the middle.
     local moveX = _input.getAxisActionX(::MoveHandle);
     local moveY = _input.getAxisActionY(::MoveHandle);
 
@@ -115,3 +115,63 @@ Then, if one of the controllers has its button released, it will still return tr
 
 At the moment axises and triggers are based on which device most recently set a value.
 In future that might change.
+
+Setting the Current Action Set
+------------------------------
+
+Action sets are set per device.
+As the action set changes, different actions will receive input based on the current action.
+
+The current action set is set like this:
+
+.. code-block:: c
+
+    local actionSetFirst = _input.getActionSetHandle("FirstSet");
+
+    _input.setActionSetForDevice(0, actionSetFirst); //Set the action set for device 0.
+    _input.setActionSetForDevice(_KEYBOARD_INPUT_DEVICE, actionSetFirst); //Set for the keyboard.
+
+Based on which actions were mapped to which buttons of the device, setting the current set will change which actions are sent.
+An example would be if there was one set for gameplay controls, and another for menu controls.
+With this method, the user is able to define actions such as 'attack' and 'jump' for the game controls, and menu specific actions such as 'up' and 'down' for the meny system.
+When the user brings up a menu, the action set for the device would change, and the appropriate actions would be sent.
+
+The Default Action Set
+----------------------
+
+The engine provides a default action set for convenience.
+It is enabled by default, although can be disabled if the user wishes to define their own.
+It has the following structure:
+
+.. code-block:: json
+
+    Default{
+        StickPadGyro{
+            "LeftMove"
+            "RightMove"
+        }
+        AnalogTrigger{
+            "LeftTrigger"
+            "RightTrigger"
+        }
+        Buttons{
+            "Accept" //A
+            "Decline" //B
+            "Menu" //X
+            "Options" //Y
+            "Start"
+            "Select"
+            "DirectionUp"
+            "DirectionDown"
+            "DirectionLeft"
+            "DirectionRight"
+        }
+    }
+
+If the user does not wish to use this action set, they can create their own by calling the ``_input.setActionSets`` function.
+The engine also allows definition of a flag in the ``avSetup.cfg`` file, if they do not wish to use it.
+This is for the sake of efficiency, as setting the action set will consume cpu on startup.
+
+.. code-block:: c
+
+    UseDefaultActionSet	false
