@@ -69,59 +69,12 @@ The difference between the file types means the same binary engine can power a n
 
 avSetup File
 ------------
-The ``avSetup.cfg`` file is a game file. There is intended to be one per game built with the engine.
+The ``avSetup.cfg`` file is a game file. There is intended to be one per project built with the engine.
 
 The file is an important file in the setup of the engine.
 It is responsible for outlining many of the basic options used by the engine, such as paths to other resource directories, and info such as a window title.
 
-The intention of the avSetup file is to allow customisation of how the engine loads itself.
-Given its data driven approach, the engine would be capable of powering a number of different games without having to change the binary at all.
-The intention of the avSetup file is to specify where exactly it should look to find this data.
-
-Say for instance you were working on a modified version of a set of game files, and you didn't want anything you did to interfere with them.
-You could place them somewhere separate from the engine install, all you would have to do to load these other files in, rather than the supplied ones would be to provide a different config file.
-
-The config file is intended to represent a single game to be powered by the engine.
-Multiple config files can be used to represent multiple games, and allow easy swapping between games, rather than having to re-compile things.
-This also illeviates the trouble of having to hard code search paths into the engine binary, as these things can be fed in at runtime.
-
-The avSetup file is also used by the testing framework to describe a single test.
-It provides an easy way to encapsulate a single test case without having to modify the engine at all, as during startup the engine can just be pointed to a different file which represents a different test case.
-
-Here is an example of an ``avSetup.cfg`` file:
-
-.. code-block:: c
-
-    WindowTitle	A title
-    DataDirectory	.
-    CompositorBackground	1 0 1 1
-    SquirrelEntryFile	squirrelEntry.nut
-
-It contains simple metadata that the engine can use.
-For instance the data directory in this example is defined to be in the same directory as the setup file, wherever that might be.
-
-All other paths are defined relative to the data directory.
-For example, providing a path to the squirrel entry file as shown above will expect it to be in the same directory as the provided data directory.
-If the squirrel entry file was specified as ``../entry.something`` the file would be expected to reside in the directory above the data directory, and have the name ``entry.something``.
-If the user doesn't want to provide relative paths, they can also supply absolute paths.
-
-.. Note::
-
-    When constructing a setup file, please make sure to adhere to the tabs and spaces format.
-    Entries in the file have keys and values, and there should be a *tab* between the two, not spaces.
-    Some editors insert spaces instead of tabs, however in this case you need to make sure that when you press the tab key you are actually inserting tabs.
-    If not the engine will skip over the entry.
-
-If a setup file contains entries like:
-
-.. code-block:: c
-
-    TestMode	True
-    TestName	SlotManagerActivatesChunk
-
-This means it is a testing setup file.
-Test mode being enabled enables some extra functionality in the engine, for instance allowing more access to the engine internals.
-It should not be used unless the engine is actually going to be running a test.
+More details of this file are provided in the section <section>
 
 Ogre HLMS files
 ---------------
