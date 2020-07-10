@@ -1,265 +1,228 @@
 Physics
 =======
-The world itself contains a number of bullet physics worlds.
-Currently there are three bullet worlds, each intended to serve a different purpose.
 
- - The dynamics world
- - The Trigger world
- - The damage world
+The engine provides support for physics features, provided by Bullet physics.
+This allows the implementation of both dynamic, realtime physics and collision detection.
+The engine's implementation of Bullet is provided in a threaded manner, meaning good performance should be possible.
 
-The dynamics world is a btDynamicWorld, which deals with simulating rigid bodies and dynamic movement in the world.
-The other two are btCollisionWorlds, they only deal with detecting and processing collisions between shapes.
+Much fo the emphasis for the physics implementation has been shifted to C++, meaning Squirrel scripts should aim to setup their physics simulation desires and let the engine fulfil them.
+For instance, the collision system allows the user to specify a number of flags to determine what counts as a collision, meaning less logic has to be performed by Squirrel.
+This allows the workload to be shifted onto the physics thread, and better performance to be achieved as a whole.
+
+The engine provides two types of physics worlds to the user:
+
+ - Dynamics world
+ - Collision world
 
 Dynamics World
 --------------
-The dynamics world is a btDynamicWorld.
-This is a world that involves more conventional physics with rigid bodies and all that sort of thing.
-It's used extensively for things like entity controllers and collision in general, and is of vital importance for the function of the engine.
+The dynamics world implements a realtime dynamic physics simulation.
+In this sense, bodies are inserted into a world, and interact with one another dynamically, similar to how they would in the real world.
+The user is able to create bodies with specified shapes, and attach them to meshes or entities.
+The attached objects will be positioned as the rigid body moves throughout the world.
+Scripts have the ability to create rigid bodies, and assign them according to their needs.
 
-The dynamics world is filled with a number of shapes at chunk load, for instance shapes to represent the terrain surface or other collidable things.
-Much of these things are static, however it is quite possible for bodies to be inserted into the world which are not.
+Collision World
+---------------
+The engine implements bullet collision as collision worlds.
+Collision worlds have no concept of dynamic movement. They care only about which objects are intersecting one another.
+The user is able to have multiple worlds at a single time, depending on their needs for collision.
+A maximum of 4 worlds is allowed, and they are specified at startup in the setup file.
+These worlds employ a system of sender and receiver objects, which allow events to be passed to scripts as required.
+Similarly to the dynamics world, a number of of methods are used to allow the user to specify exactly what they wish to be notified of, meaning much of the work can be shifted back to the engine and C++ code.
 
-Entities use their rigid bodies to determine where they should be positioned, and when an entity has a rigidBodyComponent they will be re-positioned each frame to reflect the movements of their body.
+Script Details
+--------------
+There is a number of technical details regarding the script api which should be kept in mind.
 
-Trigger World
--------------
-The trigger world is for detecting when entities enter or leave certain trigger objects.
-These trigger objects could be a variety of things, for instance:
-
- - Script callback triggers
- - Action triggers (Provides a button to press to do something)
- - Sound emission triggers
- - Ai trigger events
-
-Essentially the trigger will just allow the user to place shapes about their world that are invisible to the player.
-Currently, the system works by fitting a shape to the front the player.
-When this trigger collides with other shapes, the appropriate actions described by the colliding triggers can be performed,
-although this could be extended to include support for other entities as well.
-
-Damage World
-------------
-The damage world is for detecting when a shape moves into a damage dealing trigger.
-This system is mostly used to process the damage to be dealt to entities, as they are really all that's in the world which has a concept of 'health'.
-
-The purpose of having a separate world is to open up possibilities for more interesting forms of damage.
-For instance, an area where if the player touches it they take damage (fire, poison swamp, etc)
-All the damage world really cares about is the shapes.
-It splits the shapes into two categories, senders and receivers.
-Senders would be things like the static shapes which describe the fire on the ground.
-Senders contain data about what sort of damage they deal, which ties more into the damage system.
-Receivers reference an entity which is to be damaged when it intercepts a sender.
-The damage will be calculated based on the data in the sender.
-
-Damage senders are intended to be used in a number of ways.
-This could include as static shapes, or as attached to something, for instance the blade of a weapon or a projectile.
-In this way I'm able to take advantage of the full power of bullet to create even more realistic combat physics.
-
-.. Note::
-    I made the decision not to combine the damage world and the trigger world because I felt they conflicted too much in their intentions.
-    Even though they're both the same bullet collision worlds their actual functionality differs in noticable ways.
-    These different worlds function based on numbers of shapes, and the more shapes, the higher chance of multiple collisions needing to be dealt with each tick.
-
-    Splitting the world up prevents this problem nicely and helps to make the code cleaner, as I don't have to take into account what type of object has just been collided with.
-
-Usage
------
-
-Interracting with the physics world can be done via a number of methods.
-Much of the api is exposed to scripts, as they are able to flexibly create things like physics shapes, bodies, add and remove them from the world an so on.
-Created rigid bodies can be attached to entities and meshes, allowing a visual representation of these bodies in the world.
-
-An example of usage would be the following:
+Dynamics Overview
+^^^^^^^^^^^^^^^^^
+The following example shows how to create a rigid body, insert it into the world, and cause it to move an entity or mesh around.
 
 .. code-block:: c
 
-    //Create a shape for the rigid body. This can be used to create an unlimited number of rigid bodies.
+    //Create an entity
+    local en = _entity.create(SlotPosition());
+
+    //Create a cube shape with diameters 1x1x1.
     local shape = _physics.getCubeShape(1, 1, 1);
+    //Create a rigid body using this shape.
     local body = _physics.dynamics.createRigidBody(shape);
-    //Add it to the world. It's only considered as part of the simulation once this has happened.
     _physics.dynamics.addBody(body);
 
-    //Attach it to an entity via a component. The entity will now be moved as the body moves.
-    ::entity <- _entity.create(SlotPosition());
-    _component.rigidBody.add(entity, body);
+    //Assign the rigid body to the entity by providing it as a component.
+    _component.rigidBody.add(en, body);
+    //The user can also assign to a mesh.
+    ::mesh <- _mesh.create("cube");
+    mesh.attachRigidBody(body);
+    //NOTE a rigid body can only be attached to one object at a time.
 
+Collision Overview
+^^^^^^^^^^^^^^^^^^
+Creating objects in the collision world can be performed with the following snippet.
 
-Threading
-=========
+.. code-block:: c
 
-.. Note::
-    The following is a work in progress design.
-
-Threading the bullet world would provide a substantial performance optimisation.
-
-I am proposing to have an entire thread devoted to processing and updating the bullet world.
-This would happen each frame, and would be responsible for updating the world and synching it up with the main thread.
-
-Why not update the world in a job?
-----------------------------------
-
-I am speculating problems caused by the mis-match of job functionality.
-Jobs are intended to be used for things which are largely 'set and forget'.
-They have no deadline.
-For example, loading in chunks of the map.
-This would be finished when it's finished, and there should be no reliance on timing.
-If it takes a year to load the chunk in then so be it (that would never happen though).
-The problem would be that if the job stack was full of jobs which take a year to complete, something like the physics would become blocked.
-We would want the physics to update each frame, but this is not reliable in the job system, as jobs are processed when a worker thread becomes available.
-
-So a dedicated thread becomes the only solution.
-Physics processing is such an integral part of the engine operation that it's worth giving it a devoted thread.
-
-How is it going to be thread safe?
-----------------------------------
-
-This is obviously the main question.
-Bullet by itself is not thread safe, and pretty much the entire api cannot be used in a multi-threaded manner.
-My dedicated thread is going to update all three bullet worlds each frame. One of them is a dynamics world, and the rest are simple collision worlds.
-I'll first describe my plan for the collision worlds as they are simpler.
-
-Collision Worlds
-================
-
-The collision worlds simply determine collisions between objects.
-Rather than stepping the world, you instead just check for collisions.
-Shapes can be moved around, and the output of the collision check are collision manifolds, which describe which shapes are colliding.
-That's all the main thread is interested in.
-
-When the check for collisions is happening in a thread, nothing can change in the world.
-So this means the main thread cannot have direct access to it at all.
-However, the main thread will still want to insert things, or alter variables and so on.
-For this reason, a work around is required.
-
-The main thread communicates with the worlds through a command queue.
-These commands are queued up until the main thread is able to process them.
-This will happen at the start of the physics world's update procedure, before the world is updated.
-These commands might be something like:
- - Create a physics object
- - Apply force to an object
- - Remove an object
-
-These commands can be queued up at any point by any thread. They will be processed when the physics thread is able.
-So this means writes to the physics worlds will only ever happen when it is safe.
-
-These writing similarities are shared between all three worlds, including the dynamics world.
-For the collision worlds, reading is much simpler.
-As previously mentioned, the only value you might ever want to read is the collision manifolds.
-The main thread only cares about the collisions, and as long as this is delivered to the main thread in a suitable manner there is no further requirements.
-
-Dynamics World
---------------
-
-The dynamics world is inherently more complex.
-As part of the world update, ridgid bodies can move on their own accord.
-These changes to the shapes need to be updated and synchronised with the main thread.
-
-A common usage for ridgid bodies is attaching them to entities, to act as a controller object to navigate the world.
-So therefore, if the ridgid body moves, the entity should move along with it.
-This sort of information needs to be synchornised with the main thread.
-That in itself isn't that big of a problem.
-
-The biggest problem is wanting to do things like ray-casting in the dyanmics world.
-Ultimately, ray casting is a necessity for a number of reasons.
-It's useful for writing things like character controllers, or programming ai.
-
-However, this is largely just speculation.
-At this stage of the project, I can't be sure how important ray casting is going to be.
-A problem I'm conerned of is locking causing problems.
-
-I need to have a world which is always in a ready state.
-That way it can be queried.
-
-I feel like there might be a better way to do this.
-For instance, I could queue up by ray casts.
-Or register that I want it done each frame.
-This way they could be done in batches when the world is ready.
-The problem is that I'm not entirely sure at this point how valuable ray casts are going to be (although I can imagine quite a bit).
-A queued system would help a lot though.
-There's going to be a point in the physics world where the update starts.
-If I request a ray immediately after that, it would hit a lock, and the entire thread would become redundant.
-The main thread would have to wait for it to finish, and that's a problem.
-These rays need to be easy to call.
-
-So:
-Determine the timeline for this (can I have the dynamics world and the collision world, rather than two collision worlds).
-Can I just have a lock around the write to the collision world.
-In my immediate mind, two collision worlds sounds like it might be best, but that's a lot for just raycasting.
-
-
---
-I sort of came to the conclusion that rays are going to be more complex to support.
-I can have a system where rays are requested and performed each frame.
-For something like entities this could be done per ridgid body.
-So for instance, project a ray from this position downwards.
-The the results can be used later on.
-But the point is, they're done pre-emptively.
-
-The thing is, right now I need to just start on the basics.
-I feel like ray casting is going to become a bigger thing further down the line, but this is a prototype.
-I need to be able to add things to the world, and see them function.
-Ray casting is really just a sort of enhancement for later on.
-
-So I need to write the api to add shapes to the world, and then determine their position.
-This would be having a class (cube), where you can just set it up with a shape.
-Later the physics would output something that moves the cube position.
-If I can see a moving cube that's good.
-
-Physics Squirrel Exposure
--------------------------
-
-Physics are exposed to squirrel in quite a flexible way.
-
-.. code-block: c::
-
-    local cubeShape = _physics.createCube(10, 20, 30) //Create a cube shape. This shape can be shared between bullet objects.
-
-    local constructionInfo = {"mass":10, "friction":10}; //Used for the initial construction
-
-    local rigidBody = _physics.dynamics.createRigidBody(cubeShape, constructionInfo); //Construct a rigid body in the dynamics world.
-    local collisionShape = _physics.collision.createCollider(cubeShape); //Create a collider, constructed with the cube shape.
-
-    _entity.rigidBody.add(e, rigidBody);
-    local mesh = _mesh.createMesh("ogrehead2");
-    mesh.attachToRigidBody(rigidBody);
-
-As you can see, there is a separation between the body creation and the actual assignment to its use.
-In this example I create a shape, and assign it to both a mesh and an entity.
-This shows that the api is flexible in what you actually want to do with your physics objects.
-In this case the mesh would reflect the transformation of the rigid body, and the same would happen for the entity.
-
-Physics shapes are created in separation from the physics world.
-This means they can be shared between worlds, and will persist a world re-creation.
-Physics objects on the other hand are created bound to their world.
-They cannot be used interchangeably, and will not survive a world re-creation.
-
-Physics Shape Lifetime
-----------------------
-
-Lifetime of shapes in scripts is based on reference counting.
-The user is able to share shapes between physics objects or other squirrel variables.
-The shape memory manager will destroy the shape when it is no longer being referenced by anything.
-
-.. code-block: c::
-
-    //Shape is created.
-    ::first <- _physics.getCubeShape(10, 20, 30);
-    //Nothing else references this shape. It is destroyed.
-    delete ::first
-
-    //---------------------------------------------------
-    function something(){
-        local shape = _physics.getSphereShape(25);
+    function emptyCallback(){
+        print("I'm called on collision!");
     }
-    //The shape goes out of scope, it is destroyed.
+
+    //Tables are used to contain construction info, and passed to the construction functions.
+    local senderTable = {
+        "func" : emptyCallback
+        "id" : 1, //An arbuitrary id to be assigned to the object.
+        "type" : _COLLISION_PLAYER, //The type of object which this is.
+        "event" : _COLLISION_INSIDE //The events it should send upon.
+    };
+    local receiverInfo = {
+        "type" : _COLLISION_PLAYER, //For a collision to occur, this needs to match up with the type of the sender.
+    };
+
+    //Create a shape the same as the physics world.
+    local cubeShape = _physics.getCubeShape(1, 1, 1);
+
+    //When calling the collision world, the world is referenced by this id in the function.
+    local receiver = _physics.collision[0].createReceiver(receiverInfo, cubeShape);
+    local sender = _physics.collision[0].createSender(senderTable, cubeShape);
+
+    //Attach the objects to the world.
+    _physics.collision[0].addObject(sender);
+    _physics.collision[0].addObject(receiver);
+
+Collision senders and receivers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The collision world uses the concept of senders and receivers to perform collisions.
+Only if a sender and receiver collide can an event occur.
+
+As an example, if the user wanted to build a damage dealing projectile system, this could be easily fulfilled with the collision world.
+The user might create a sender which sends fire damage. It has no need to move, but sits there and waits for a receiver, attached to the player, to touch it.
+When the callback occurs, the script can apply the damage to the object.
+
+Or, if creating a trigger system, the user might want a function to run when the player gets close enough to a door.
+In this case a sphere sender would be placed by the door, waiting for the player receiver to approach it.
+
+Scripting objects are reference counted
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This means that when script objects such as shapes, rigidBodies and collision sender and receivers run out of references, they are destroyed.
+The intention of this is to help avoid memory leaks, and make destruction of objects as simple as possible.
+
+Collision objects which are attached to entities or meshes will gain a reference, and can be obtained later.
+However, objects which are not attached and lost all references will be destroyed.
+
+The following snippet demonstrates this:
+
+.. code-block:: c
+
+    //If never used for anything, this shape would be destroyed once this variable loses scope.
+    local shape = _physics.getCubeShape(1, 1, 1);
+
+    //A body has been created which references the shape.
+    local body = _physics.dynamics.createRigidBody(shape);
+    //Previously the shape would have been destroyed when set to something else. Now it survives while the body survives.
+    shape = 0;
+
+    //A mesh is created and the body is attached to it. The body's lifespan extends until the mesh is destroyed.
+    ::mesh <- _mesh.create("cube");
+    mesh.attachRigidBody(body);
+    //Resetting the body will not destroy it as it has these references.
+    body = 0;
+    //The body now has no references. Both it and its shape are destroyed. If the shape was used by other bodies it would survive.
+    mesh.detachRigidBody();
+
+The user must specify how many collision worlds they wish to use
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Information about the collision worlds is specified in the setup file.
+If the user does not specify any of this information, the engine assumes the user does not wish to use any collision worlds.
+
+Collision world object properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The engine provides the user with access to a number of object properties which can be set during collision object creation.
+Once set they cannot be changed.
+
+An example is shown below.
+
+.. code-block:: c
+
+    function emptyCallback(){
+        print("I'm called on collision!");
+    }
+
+    //Tables are used to contain construction info, and passed to the construction functions.
+    local senderTable = {
+        "func" : emptyCallback,
+        "id" : 1, //An arbuitrary id to be assigned to the object.
+        "type" : _COLLISION_PLAYER | _COLLISION_ENEMY | _COLLISION_OBJECT,
+        "event" : _COLLISION_INSIDE | _COLLISION_ENTER | _COLLISION_LEAVE
+    };
+    local receiverInfo = {
+        "type" : _COLLISION_PLAYER | _COLLISION_ENEMY //For a collision to occur, this needs to match up with the type of the sender.
+    };
+
+    local receiver = _physics.collision[0].createReceiver(receiverInfo, _physics.getCubeShape(1, 1, 1));
+    local sender = _physics.collision[0].createSender(senderTable, _physics.getCubeShape(1, 1, 1));
+    _physics.collision[0].addObject(sender);
+    _physics.collision[0].addObject(receiver);
+
+These parameters are provided as part of the table input.
+The possible parameters are:
+
+.. list-table::
+   :widths: 50 50
+   :header-rows: 1
+
+   * - Key
+     - Value
+   * - type
+     - The type that this sender or receiver is. This is used to refine collisions. This input is a bit mask, so an object can have multiple types.
+   * - func
+     - Either a squirrel closure or a string representing a function to be called when a collision occurs. If a string is provided, the "path" field is also expected to be populated.
+   * - path
+     - A res path to a squirrel script. If populated, the engine will use this path to determine which script to call, expecting a function with the same name as previously provided in the "func" parameter.
+   * - id
+     - A numeric id, provided by the user. This id is not used by the engine, and is purely a means to identify an object.
+
+When specifying a receiver object, only the type value is used.
+
+Reduce the number of callbacks used
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Callback scripts can be loaded once and shared between multiple objects.
+For best performance, limit the number of different scripts to as few as possible.
+
+As an example, the user might be using a collision world to perform trigger events.
+The most efficient way to meet this requirement is this:
+
+.. code-block:: c
+
+    function playerEnter(id){
+        switch(id){
+            case 0:
+                print("Player reached door");
+                break;
+            case 1:
+                print("Player reached gate");
+                break;
+        }
+    }
+
+    function playerLeave(id){
+        print("do something");
+    }
+
+In this example, the same function is used, and the sender id is used to determine how to handle the event.
+This approach is much more memory efficient than assigning a unique function for each sender.
+
+The user might assign a different script for the colliders per chunk of the game.
+If colliders share the same closure and script, callback script and closure information can be shared in memory.
+Generally the user should prefer to specify a script and function rather than a callback, as it is better structured for larger projects.
 
 
-    //---------------------------------------------------
-    ::another <- _physics.getCubeShape(35, 45, 55);
+Threading details
+-----------------
 
-    //Create a duplicate of this shape (<- is the same as the = operator)
-    ::second <- ::another;
+Physics in the engine is implemented using threads.
+The user should be aware of this fact, as there is a chance they will meet issues as a result of the latency between the worker thread and the main thread.
+Script functions to add or remove bodies, as well as functions such as set body position are subject to a delay between threads.
+This delay is often only a single frame between a request being made, and it being fulfilled.
 
-    //Destroy the first shape. The shape itself will still exist as long as second still exists.
-    delete ::another;
-    //Now destroy second. The shape should be destroyed.
-    delete ::second;
+Functionality such as getting the position of objects can be performed from the main thread, as a copy is made of useful data such as this.
