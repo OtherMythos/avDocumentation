@@ -2,6 +2,10 @@ Slot Manager
 ============
 
 The Slot Manager is the response to the problem of streaming a continuous open world.
+It allows pieces of level data to be loaded in and out of memory as the player moves around.
+This level data can include meshes, terrain, physics information and nav mesh data.
+It also provides a solution to the problem of floating point precision.
+
 A number of problems and issues arise when attempting to stream a large world.
 These include:
 
@@ -9,27 +13,30 @@ These include:
  - Floating point precision issues
  - Loading times
 
-My solution of slots and chunks solves these problems.
-There is a difference between the two.
+The SlotManager employs the concept of *Slots* and *Chunks* to solve this issue.
 
-A slot is a coordinate in the world.
-A chunk is a piece of data that fits into a slot.
+A Slot is a coordinate in the world.
+
+A Chunk is a piece of data that fits into a slot.
+
 In order to stream an open world, you need to split it into smaller individual *chunks* of data.
 This data is loaded in and presented in the world depending on where the player is at that moment.
 As the player moves around, new chunks are loaded and inserted, and old ones are deleted.
-In this sense the game gives the impression that the whole world is loaded at a single time, when infact it is only partly loaded.
+In this sense the game gives the impression that the whole world is loaded at a single time, when in fact it is only partly loaded.
 
 Floating Point Precision
 ------------------------
-A slot is a position in the world, and in my implementaton they exist to combat the problem of floating point precision.
-Floating point precision is a fundamental problem in computer science, in which computers have trouble representing floating point numbers of a high magnitude.
+Floating point precision is a fundamental problem in computer science, in which computers have trouble representing floating point (decimal) numbers of a high magnitude.
 The bigger the whole number gets, the less of a resolution the decimal number can have.
-For a 3d simulation this can be detremental, and is a classic problem for simulations with a large world.
-While problems might not present themselves at a closer position to the origin when the magnitude is small, in bigger areas further from the origin this becomes difficult to manage.
-Ultimately it leads to peculiar results from the 3d render, or innacurate physics.
-My design combats floating point issues by splitting the map into smaller sections, these sections are known as *slots*.
 
-So slots would have a set size in world coordinates, say 500 units.
+For a 3d simulation this can have a detrimental effect, and is a classic problem for simulations with a large world.
+With a lower resolution of decimal value, problems which require precision such as rendering and physics cannot function as intended.
+Commonly, jumpy renderings become common as the precision at which the computer can represent decimals decreases.
+
+Slots and their benefit
+-----------------------
+The problem of floating point precision is combated with Slots.
+Slots would have a set size in world coordinates, say 500 units.
 That means the origin would have a value of
 
 ``x:0 y:0``
@@ -39,43 +46,53 @@ The position 500 in world coordinates would be:
 ``x:1 y:1``
 
 Because the size of a single slot is 500x500.
-In between these slots is another measurement, which I represent as an OgreVector3.
+In between these slots is another measurement, which is represented as an Vector3.
 
 ``x:1 y:0 (100, 0, 100)``
 
 This vector3 allows you to represent any position within slot space.
 This coordinate system is known as *SlotPositions*.
 
-The best thing about the SlotPosition system is that they function as an abstraction for the actual origin of the world.
-This is what I used to remove the floating point problem.
+The origin of the world is set in the top left corner of the coordinate system.
+This means that positive x moves in the right direction, and positive z moves downwards from the slot positions.
 
-Libraries like Ogre and Bullet want to know where to place things in hard floating point numbers, which are susceptable to these issues.
-This means even with my coordinate system they need to map into actual positions which are within the safe range of values.
-As a nieve approach I could just multiply the x and y values by the chunk size and have the position, however this would be just as useful as storing the position as an actual float value.
-Instead the solution is to store a slot position to reference the origin of the world.
-In this approach, none of the slot positions themselves actually change, but the floating point number they map to changes based on the origin of the world.
+The intention of this system is to allow an abstraction of the true origin of the world.
+The engine allows the user to set the origin to any SlotPosition, and then all objects which rely on a regular three float coordinate system are placed relative to this.
+The engine abstracts SlotPositions to a class which manages these conversions.
+It contains the ability to retrieve the value of the SlotPosition as a Vector3, which is relative to the user defined origin.
 
-As the player moves around, I can move this origin as necessary.
-Say they cross a threshold of 1000 world units distance from the origin, I would shift everything in the world to be positioned around where the player is, and set their current position as the origin.
-This is a process known as origin shifting.
-To the user there has been no change in any of the slot positions, as their actual values don't change.
-However, when the engine is asked to convert a slot position to a float value this can be done taking the origin into account, thus producing a floating point position which is within the safe bounds!
+This system means the user can specify a very large world without any concern for floating point precision.
+Entities, nodes and physics objects can all be positioned as a SlotPosition in a global world coordinate.
 
-So ultimately the SlotPositions are nothing more than a way to abstract the actual position in the world.
-The user won't have to worry about where or what the origin of the world is, or origin shifting at all.
-All the details of where things end up in the world can be handled by the engine.
+Origin Shifting
+---------------
+The engine allows the user to warp the origin at any time they like.
+This is a process called origin shifting.
+Here, meshes, physics objects, entities and any other object in the world will be offset by the required value in respect to the new origin.
+
+This process should be completely seamless to the player.
+
+However, origin shifting should be performed sparingly, as it is very expensive.
+Generally the user will want to perform an origin shift when the player has moved a given distance from the origin, say for instance 2000 units.
+In order to achieve suitable performance, the user might want to consider techniques such as origin shifting when changing maps, or during a cutscene.
+
+Chunks
+------
+Each slot in the world can have data associated with it.
+As the player moves around, they will want to see new things be loaded in and out of the engine.
+
+Chunks are a type of world data which are inserted into slots.
+Each chunk has a slot associated with it, which defines when it is loaded, and where its level data appears in the world.
 
 Recipies and Chunks
 -------------------
 Recipies are a concept used by the slot manager to construct chunks.
 A recipe is a collection of plain data structures which describe how to construct a chunk.
-Recipies have nothing to do with an actual constructed chunk.
+Recipe data can be re-used as many times as necessary.
 
-The reason for recipies centres around threading and blocking IO.
-Much of the libraries used by the engine (bullet, ogre) have a preference of single threaded activity.
-For instance, the process of creating an ogre scene node is not thread safe.
-Therefore, the actual construction of the chunks needs to be done on the main thread.
-This holds true for a number of other non thread safe components.
+Recipies are loaded into memory using a threaded approach.
+This means the data for the world is loaded in the background without any interruption for the player.
+
 Recipies allow the threading system to load chunks into an intermediate state before their actual construction.
 This helps prevent the problems posed by blocking IO, as slow file read speeds won't cause the main thread to hang.
 
@@ -83,7 +100,7 @@ When a chunk is requested to be constructed into the world, the recipe will firs
 Recipies are stored in memory until they are destroyed to make room for a newer recipe.
 When a chunk is deconstructed, the recipe won't necessarily be destroyed along with it.
 The slot manager operates by maintaining a maximum number of recipies that can be loaded at a time.
-This way, if the chunk is later required to be reconstructed, and the recipe still exists in memory, then it won't have to be read in from a file again.
+This way, if the chunk is later required to be reconstructed, and the recipe still exists in memory, then it won't have to be read in from the file system again.
 
 Scripts and loading chunks
 --------------------------
@@ -111,11 +128,6 @@ Lots of the more complex functionality is going to be implemented in c++ as comp
 Things like teleporting the player will be exposed to scripts, but actually implemented in the engine.
 That means the teleportation code can take advantage of the Slot Manager's functionality with things like pre-creating a chunk.
 In this way the scripts can use the flexiblity of the engine without having to expose complex system to the user.
-
-Origin
-------
-The origin of the world is set in the top left corner of the coordinate system.
-This means that positive x moves in the right direction, and positive z moves downwards from the slot positions.
 
 Loading Procedure
 -----------------
@@ -169,7 +181,7 @@ Switching maps involves the following procedure:
  - Destroys all tracked entities.
  - Destroys all chunks (meshes, physics shapes)
 
-Interiors
+Interiors (Not implemented yet)
 ---------
 
 An interior is a special type of map which does not utilise the streamable world as described above.
