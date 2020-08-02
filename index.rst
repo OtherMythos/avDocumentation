@@ -50,7 +50,8 @@ Much of the engine is based on external libraries. These include:
     :name: sec-Architecture
 
     architecture/index
-    CreatingContent/index
+    CreatingContent/overview.rst
     setup/index
     squirrel/index
     Test/index
+    building/index
