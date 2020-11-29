@@ -20,3 +20,4 @@ Southsea is a tool specifically to design maps/levels for the engine, and should
      Southsea.rst
      GeneratingMeshes.rst
      assetPipeline.rst
+     UserEntityComponents.rst
