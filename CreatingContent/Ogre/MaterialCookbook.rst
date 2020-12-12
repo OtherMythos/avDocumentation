@@ -1,0 +1,90 @@
+Ogre Material Cookbook
+======================
+
+Ogre supports pbs and unlit implementations by default.
+
+Transparency
+------------
+
+Simple transparent material.
+
+.. code-block:: json
+
+    {
+        "blendblocks" :
+        {
+            "waterBlend" :
+            {
+                "dst_blend_factor" : "one"
+            }
+        },
+
+        "pbs" :
+        {
+            "waterMaterial" :
+            {
+                "workflow" : "metallic",
+                "diffuse" :
+                {
+                    "value": [0.1, 0.1, 1]
+                },
+                "transparency" :
+                {
+                    "value" : 1,
+                    "mode" : "transparent"
+                }
+            }
+        }
+    }
+
+The transparency of the object is applied based on the "transparency" entry.
+A value of 1 makes the object more transparent and 0 makes it less.
+
+The blendblock is necessary to make the transparency active.
+
+Detail layers
+-------------
+
+Detail layers are used to provide additional detail to an existing material.
+For instance, they are useful for showing things like dirt or blemishes on a character's face, where the standard diffuse and normal textures have been used for the face itself.
+Detail layers allow themselves to be tiled, scaled and offsetted, which makes them useful for animation.
+
+This material uses two normal maps to produce a scrolling water effect.
+
+.. code-block:: json
+
+    {
+        "blendblocks" :
+        {
+            "waterBlend" :
+            {
+                "dst_blend_factor" : "one"
+            }
+        },
+
+        "pbs" :
+        {
+            "waterMaterial" :
+            {
+                "blendblock": "waterBlend",
+                "workflow" : "metallic",
+                "diffuse" :
+                {
+                    "value": [0.1, 0.1, 1]
+                },
+                "detail_normal0":{
+                    "value" : 2,
+                    "texture": "SeaPattern.tga"
+                },
+                "detail_normal1":{
+                    "value" : 1,
+                    "texture": "SmallWaves.tga"
+                },
+                "transparency" :
+                {
+                    "value" : 1.0,
+                    "mode" : "Transparent"
+                }
+            }
+        }
+    }

@@ -17,6 +17,7 @@ Southsea is a tool specifically to design maps/levels for the engine, and should
      :name: toc-architecture
 
      Maps/Maps.rst
+     Ogre/MaterialCookbook.rst
      Southsea.rst
      GeneratingMeshes.rst
      assetPipeline.rst
