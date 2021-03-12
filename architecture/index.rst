@@ -13,3 +13,5 @@ Architecture
     Serialisation.rst
     DialogSystem.rst
     InputSystem.rst
+    SequenceAnimations.rst
+    EventSystem.rst
