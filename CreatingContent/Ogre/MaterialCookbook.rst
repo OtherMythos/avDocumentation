@@ -88,3 +88,37 @@ This material uses two normal maps to produce a scrolling water effect.
             }
         }
     }
+
+Tiling Textures
+---------------
+
+Sampler blocks can be used to tile textures. By default they will be clamped.
+Detail diffuse is used because it allows scale to be specified.
+
+.. code-block:: json
+
+    {
+        "samplers" :
+        {
+            "wrapSampler" :
+            {
+                "u" : "wrap",
+                "v" : "wrap",
+                "w" : "wrap"
+            }
+        },
+
+        "pbs" :
+        {
+            "testingFloor" :
+            {
+                "workflow" : "metallic",
+                "detail_diffuse0" :
+                {
+                    "scale": [15, 15],
+                    "texture": "checkerPattern.png",
+                    "sampler": "wrapSampler"
+                }
+            }
+        }
+    }
