@@ -4,7 +4,7 @@ Build the Documentation
 This documentation is stored in the ``avDocumentation`` repository.
 It can be built with the following steps.
 
-In a linux command line:
+For a Debian based system:
 
 .. code-block:: bash
 

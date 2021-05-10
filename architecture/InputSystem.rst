@@ -68,6 +68,9 @@ Finally, the contents of these actions can be queried.
     local moveX = _input.getAxisActionX(::MoveHandle);
     local moveY = _input.getAxisActionY(::MoveHandle);
 
+This action based approach makes mapping inputs easy.
+The game code checks for "Jump", not for "X button pressed".
+This means that if the user wishes to use the A button for jumping, they can do so easily.
 
 Mapping Keyboards
 -----------------
@@ -77,6 +80,22 @@ This includes buttons, triggers and axises.
 However it should be noted that the keyboard keys send very rigid values.
 For instance, when mapping a trigger, the value set will be either 0 or 1. There is no in-between.
 A similar thing occurs for axises.
+
+Querying by Pressed and Released
+--------------------------------
+
+The user can filter inputs by providing flags when querying an action.
+
+For instance:
+
+.. code-block:: c
+
+    //Only returns true when the button is initially pressed.
+    local pressed = _input.getButtonAction(::AButton, _INPUT_PRESSED);
+    //Only returns true when the button is released.
+    local released = _input.getButtonAction(::AButton, _INPUT_RELEASED);
+    //Returns true when the button is down. The same as providing nothing.
+    local held = _input.getButtonAction(::AButton, _INPUT_ANY);
 
 Querying Specific Devices
 -------------------------
@@ -93,10 +112,10 @@ Querying a device looks like this:
 
 .. code-block:: c
 
-    _input.getButtonAction(::AButton, 0); //Query device 0
-    _input.getButtonAction(::AButton, 1); //Query device 1
+    _input.getButtonAction(::AButton, _INPUT_ANY, 0); //Query device 0
+    _input.getButtonAction(::AButton, _INPUT_ANY, 1); //Query device 1
     //Given how it's checking a different device, one might return true and one might return false.
-    _input.getButtonAction(::AButton, _KEYBOARD_INPUT_DEVICE); //Query the keyboard.
+    _input.getButtonAction(::AButton, _INPUT_ANY, _KEYBOARD_INPUT_DEVICE); //Query the keyboard.
 
     _input.getButtonAction(::AButton); //Not specifying a device will default to the any device.
 
