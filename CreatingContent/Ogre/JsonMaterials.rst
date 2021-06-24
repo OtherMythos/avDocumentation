@@ -113,6 +113,14 @@ Every option for a PBS json material is shown below:
                 {
                     "texture" : "cubemap.png",
                     "sampler" : "unique_name"
+                },
+
+                "emissive" :
+                {
+                    "value" : 1,
+                    "texture" : "texture.png",
+                    "sampler" : "unique_name",
+                    "uv" : 0
                 }
             }
         }
