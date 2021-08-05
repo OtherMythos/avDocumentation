@@ -15,3 +15,4 @@ Architecture
     InputSystem.rst
     SequenceAnimations.rst
     EventSystem.rst
+    SceneQuerying.rst
