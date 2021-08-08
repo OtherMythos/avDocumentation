@@ -54,6 +54,17 @@ If you have problems with the mesh exporter blender should alert you of this.
 If you still have problems with the meshTool path, blender does allow you to set it using their gui, inside the extensions window.
 Expand the options for the mesh tool, and you should see it there.
 
+Every created skeleton animation is named 'my_animation'
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Name your animation whatever you want in the hierarchy view on the left.
+
+Switch to the dope sheet view, then the action editor.
+Ensure your current track is selected in the options.
+There should be an option somewhere on the left with a snowflake with the word 'stash' next to it.
+
+Pressing this will register your animation in the NLA stack.
+
 avTools asset pipeline
 ^^^^^^^^^^^^^^^^^^^^^^
 
