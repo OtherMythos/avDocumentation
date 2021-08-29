@@ -45,6 +45,43 @@ A value of 1 makes the object more transparent and 0 makes it less.
 
 The blendblock is necessary to make the transparency active.
 
+Alpha Transparency
+^^^^^^^^^^^^^^^^^^
+
+Rendering a mesh, discarding certain pixels if they contain alpha.
+This can act as an optimisation, as the scene does not treat the object as transparent, meaning the most efficient sorting can be used.
+However this can lead to some incorrect depth calculations.
+
+.. code-block:: json
+
+    {
+        "blendblocks" :
+        {
+            "spiderNestBlend" :
+            {
+                "src_blend_factor" : "one",
+                "dst_blend_factor" : "one_minus_src_alpha"
+            }
+        },
+
+        "pbs" :
+        {
+            "SpiderObjectsWebMaterial" :
+            {
+                "workflow" : "metallic",
+                "blendblock": "spiderNestBlend",
+                "diffuse" :
+                {
+                    "value" : [1, 1, 1],
+                    "texture": "SpiderWebParts.png"
+                }
+            }
+        }
+    }
+
+.. image:: ../../img/content/transparencyAlphaDifference.png
+
+
 Detail layers
 ^^^^^^^^^^^^^
 
