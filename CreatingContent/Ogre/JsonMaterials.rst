@@ -117,7 +117,7 @@ Every option for a PBS json material is shown below:
 
                 "emissive" :
                 {
-                    "value" : 1,
+                    "value" : [1, 1, 1],
                     "texture" : "texture.png",
                     "sampler" : "unique_name",
                     "uv" : 0
@@ -126,6 +126,7 @@ Every option for a PBS json material is shown below:
         }
     }
 
+detail_diffuse and detail_normal can have up to four separate entries, where the index is affixed to the end of the declaration.
 
 Unlit
 -----
