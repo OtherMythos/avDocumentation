@@ -37,7 +37,8 @@ Every option for a PBS json material is shown below:
                     "value" : [1, 1, 1],
                     "texture" : "texture.png",
                     "sampler" : "unique_name",
-                    "uv" : 0
+                    "uv" : 0,
+                    "grayscale": true
                 },
 
                 "specular" :
@@ -120,7 +121,8 @@ Every option for a PBS json material is shown below:
                     "value" : [1, 1, 1],
                     "texture" : "texture.png",
                     "sampler" : "unique_name",
-                    "uv" : 0
+                    "uv" : 0,
+                    "lightmap": true
                 }
             }
         }
