@@ -40,6 +40,9 @@ release = '0.1'
 # ones.
 #extensions = ['sphinxcontrib.plantuml'
 #]
+extensions = [
+    'sphinx_rtd_theme'
+]
 
 # plantuml = 'java -jar /home/edward/Documents/plantUML/plantuml.jar'
 
